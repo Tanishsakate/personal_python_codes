@@ -1,0 +1,51 @@
+-- query to get alternate supplier
+WITH CTE1 as
+(
+    SELECT DISTINCT component_id
+    from GTO_standard_schema.copy_app_product_network_vcn apnv
+    where product_name  like'JFFD-DOG CS12 12.5Z CRTCAL CRE' and shipper_company_name like 'kbr' --here we add company which selected from node and product_name
+),																								 --to fetch alternate supplier for those component
+CTE2 as 
+(
+    select shipper_company_name,shipper_id  
+    from GTO_standard_schema.copy_app_product_network_vcn apnv
+    group by shipper_company_name,shipper_id    
+    having count(DISTINCT risk_type) = 0    
+),
+cte11 as
+(
+    SELECT DISTINCT shipper_id  
+    from GTO_standard_schema.app_product_network_vcn apnv
+    where risk_level = 'low' or risk_level = 'mid' or risk_type is null
+),
+cte12 as
+(
+    select cte11.shipper_id  
+    from cte11 
+    where shipper_id not in (SELECT DISTINCT shipper_id  
+    from GTO_standard_schema.copy_app_product_network_vcn apnv
+    where risk_level = 'high')    
+)
+SELECT DISTINCT apnv.shipper_company_name ,apnv.component_id,apnv.country ,apnv.lat ,apnv.lng,
+apnv.risk_type ,apnv.risk_level,apnv.email_address  
+from GTO_standard_schema.copy_app_product_network_vcn apnv
+inner join CTE1 as c1 on c1.component_id =apnv.component_id
+inner join CTE2 as c2 on c2.shipper_id = apnv.shipper_id
+inner join cte12 as c3 on c3.shipper_id = apnv.shipper_id;
+
+
+
+
+
+
+
+WITH CTE1 as
+(
+	SELECT DISTINCT component_id
+	from GTO_standard_schema.copy_app_product_network_vcn apnv
+	where product_name  like'JFFD-DOG CS12 12.5Z CRTCAL CRE' and shipper_company_name like 'kbr'
+)
+SELECT DISTINCT apnv.shipper_company_name ,apnv.component_id,apnv.country ,apnv.lat ,apnv.lng,
+apnv.risk_type ,apnv.risk_level,apnv.email_address  
+from GTO_standard_schema.copy_app_product_network_vcn apnv
+inner join CTE1 as c1 on c1.component_id =apnv.component_id

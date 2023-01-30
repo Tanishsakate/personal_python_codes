@@ -1,0 +1,93 @@
+create schema RFI;
+DROP SCHEMA RFI;
+
+-- creating tbl project to store data about project and category information for which industry(hscode) this project has been created
+CREATE TABLE gtosqldbdev.GTO_standard_schema.RFI_project (
+	id int IDENTITY(1,1) NOT NULL,
+	project_name varchar(100) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NOT NULL,
+	category varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NOT NULL,
+	region varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8  NULL,
+	hs_code int NOT NULL,
+	project_status varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	created_date date NOT NULL,
+	due_date date NOT NULL
+	CONSTRAINT PK__tbl_comp__3213E83F81CB445E PRIMARY KEY (id)
+);
+
+--drop table gtosqldbdev.RFI.RFI_project;
+
+-- creating table app_users to store information of users. Which will be authorised to send email.
+CREATE TABLE gtosqldbdev.GTO_standard_schema.RFI_users (
+	id int IDENTITY(1,1) NOT NULL,
+	user_name varchar(100) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NOT NULL,
+	email_id varchar(100) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NOT NULL,
+	indenity varchar(100) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NOT NULL,
+	CONSTRAINT PK__tbl_comp__3213E83F81CB445l PRIMARY KEY (id)
+);
+
+drop table GTO_standard_schema.app_users;
+
+-- tbl company already exists which will have emails for suppliers.
+CREATE TABLE gtosqldbdev.GTO_standard_schema.tbl_company (
+);
+
+-- table tbl_email_templates to store templates and information who created it and when.
+CREATE TABLE gtosqldbdev.GTO_standard_schema.RFI_email_templates (
+	id int IDENTITY(1,1) NOT NULL,
+	template_type varchar(100) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	template_name varchar(100) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	body varchar(max) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	template_blob_location varchar(max) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	uploaded_at date,
+	uploaded_by_id int, -- foreign key (user id from app_user)
+	uploaded_by varchar(100) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL
+	CONSTRAINT PK__tbl_comp__3213E83F81CB445G PRIMARY KEY (id),
+	FOREIGN KEY (uploaded_by_id) REFERENCES GTO_standard_schema.app_users(id),
+	check(template_type in ('RFI', 'RFQ'))
+);
+
+drop table RFI.tbl_email_templates;
+
+ALTER TABLE RFI.tbl_email_templates DROP CONSTRAINT FK__tbl_email__uploa__1CBEA81B;
+
+
+
+
+-- table rfi which keeps track of all mail recieved and sent per user and supplier and thier ongoin status for that mail thread
+CREATE TABLE gtosqldbdev.GTO_standard_schema.RFI_rfi_transaction (
+	id int IDENTITY(1,1) NOT NULL,
+	sent_by int  NOT NULL, -- foreign key
+	sent_to int NOT NULL, -- foreign key
+	email_template_id int NOT NULL, -- foreign key
+	project_id int NOT NULL, -- foreign key
+	response_received int NOT NULL, 
+	status varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	rfi_date date not null
+	CONSTRAINT PK__tbl_comp__3213E83F81CB445Q PRIMARY KEY (id),
+	FOREIGN KEY (sent_by) REFERENCES GTO_standard_schema.app_users(id),
+	FOREIGN KEY (sent_to) REFERENCES GTO_standard_schema.tbl_company(id),
+	FOREIGN KEY (email_template_id) REFERENCES GTO_standard_schema.RFI_email_templates(id),
+	FOREIGN KEY (project_id) REFERENCES GTO_standard_schema.RFI_project(id)
+);
+
+
+drop table GTO_standard_schema.tbl_rfi;
+
+ALTER TABLE RFI.tbl_rfi DROP CONSTRAINT FK__tbl_rfi__email_t__22778171;
+ALTER TABLE RFI.tbl_rfi DROP CONSTRAINT FK__tbl_rfi__project__236BA5AA;
+ALTER TABLE RFI.tbl_rfi DROP CONSTRAINT FK__tbl_rfi__sent_by__208F38FF;
+ALTER TABLE RFI.tbl_rfi DROP CONSTRAINT FK__tbl_rfi__sent_to__21835D38;
+
+
+
+
+-- table which keeps tracks of attachment received from user 
+CREATE TABLE gtosqldbdev.GTO_standard_schema.RFI_response_attachment (
+	id int IDENTITY(1,1) NOT NULL,
+	rfi_id int NOT NULL, -- foreign key
+	attachment_blob_location varchar(5) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	CONSTRAINT PK__tbl_comp__3213E83F81CB445O PRIMARY KEY (id),
+	FOREIGN KEY (rfi_id) REFERENCES GTO_standard_schema.RFI_rfi_transaction(id)
+);
+
+ALTER TABLE RFI.tbl_response_attachment DROP CONSTRAINT FK__response___rfi_i__26481255;

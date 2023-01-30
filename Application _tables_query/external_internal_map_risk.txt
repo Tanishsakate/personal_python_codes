@@ -1,0 +1,22 @@
+-- supply chain external risk
+SELECT pnv.product_name ,pnv.product_id ,avg(score) as avg_risk_score,sum(invoice_amount) as invoice_amount
+,COUNT(DISTINCT component_id) as components_required
+from cortevadev2.Product_Network_VCN pnv  
+where pnv.shipper_tier ='T1' and pnv.product_id = 1027
+GROUP by pnv.product_id,pnv.product_name;
+
+
+-- supply chain internal risk
+
+with material_data as 
+(
+	SELECT timr.material ,sum(invoice_amount) as invoice_amount_at_risk,avg(risk_score) as avg_risk_score
+	from cortevadev2.tbl_internal_material_routing timr   
+	where material ='material_1'
+	GROUP by timr.material 	
+)
+SELECT pn.material ,pn.invoice_amount_at_risk,pn.avg_risk_score,count(DISTINCT component_id) as component_required
+from cortevadev1.tbl_material tm 
+inner join material_data as pn on pn.material=tm.material_desc 
+inner join cortevadev2.Product_Network_VCN pnv on pnv.product_id = tm.material_id
+GROUP by pn.material ,pn.invoice_amount_at_risk,pn.avg_risk_score,material_id;

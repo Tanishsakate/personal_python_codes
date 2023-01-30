@@ -1,0 +1,27 @@
+SSD - Shipping date
+SSW - 
+
+Step 1 : Sales_data has 
+			- qty_sold : Sumation of this column 
+			- unit_price : taking avg selling revenue / unit price(recommended)
+			- product : single product 
+			
+
+
+
+
+
+
+
+
+
+
+siop.BOM_20220518_Rawbom
+tab.Data_oo1_salesorders_BBB
+shm.historicalshipments
+shm.OnhandInventory
+shm.item_Attributs
+stg.004_PO_commitments_Purches_order_daily  
+
+
+@if(empty(activity('Get_job_status').output.value),'True',if(equals(activity('Get_job_status').output.value[0].status_id,2),'True','False'))

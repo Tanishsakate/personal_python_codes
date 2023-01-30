@@ -1,0 +1,39 @@
+-- supplier details and exposures
+
+SELECT DISTINCT pnv.shipper_id ,pnv.shipper_company_name ,pnv.risk_type  ,AVG(pnv.score) as score 
+from cortevadev2.Product_Network_VCN pnv 
+where shipper_id = 1440
+group by pnv.shipper_id ,pnv.shipper_company_name ,pnv.risk_type;
+
+-- product by this supplier
+
+SELECT DISTINCT pnv.shipper_id ,pnv.shipper_company_name ,pnv.component_name ,pnv.component_id ,pnv.product_name ,pnv.product_id ,
+sum(pnv.invoice_quantity) as invoice_quantity ,sum(pnv.invoice_amount) as invoice_amount
+from cortevadev2.Product_Network_VCN pnv 
+where shipper_id = 1440
+group by pnv.shipper_id ,pnv.shipper_company_name ,pnv.component_name ,pnv.component_id ,pnv.product_name ,pnv.product_id;
+
+
+
+--- Alternet supplier
+
+with shipper_info as
+(
+	SELECT DISTINCT pnv.shipper_id ,pnv.shipper_company_name ,pnv.product_name ,pnv.product_id ,
+sum(pnv.invoice_quantity) as invoice_quantity ,sum(pnv.invoice_amount) as invoice_amount
+from cortevadev2.Product_Network_VCN pnv 
+where shipper_id = 1440
+group by pnv.shipper_id ,pnv.shipper_company_name ,pnv.product_name ,pnv.product_id
+),
+risk_score as
+(
+	SELECT DISTINCT pnv.shipper_id ,pnv.shipper_company_name ,pnv.risk_type  ,AVG(pnv.score) as score 
+	from cortevadev2.Product_Network_VCN pnv 
+	where shipper_id = 1440
+	group by pnv.shipper_id ,pnv.shipper_company_name ,pnv.risk_type
+)
+SELECT DISTINCT  rs.shipper_company_name,rs.shipper_id,rs.risk_type,rs.score,sa.product_name,pnv1.shipper_company_name as alternate_company
+from risk_score rs
+inner join shipper_info sa on sa.shipper_company_name = rs.shipper_company_name
+left join cortevadev2.Product_Network_VCN pnv1 on  sa.product_id = pnv1.product_id
+where pnv1.risk_level ='Low' and pnv1.shipper_id != 1440;

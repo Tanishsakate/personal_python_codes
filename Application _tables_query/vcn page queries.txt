@@ -1,0 +1,17 @@
+--supplier concentration by region
+
+select pnv.country , count(DISTINCT pnv.shipper_id) as supplier_count 
+FROM cortevadev2.Product_Network_VCN pnv 
+WHERE  pnv.product_id  = 1021  
+AND  pnv.risk_type ='transport' 
+GROUP BY pnv.country 
+order BY pnv.country; 
+---------------------------------------------------
+--overall exposure for top supplier
+
+select pnv.shipper_company_name, AVG(pnv.score) as Avg_score
+FROM cortevadev2.Product_Network_VCN pnv 
+WHERE  pnv.product_id  = 1021  
+AND  pnv.risk_type ='transport' 
+GROUP BY pnv.shipper_company_name 
+ORDER BY AVG(pnv.score) DESC 

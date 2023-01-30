@@ -1,0 +1,59 @@
+Doubts -
+	1. Need_by_date or Promise_date to be considered for lead time.
+	2. Item_number in PO data ? what should it be considered product_id or component_id
+	3. Cant find exact product in data
+
+1. Sale data (Not available).
+	- selling price of a product.
+		- To calculate revenue loss per product.
+2. Bom (Not available).
+    - Unit of components required to manufacture a single product.
+		- To calculate how many products can be manufactured as per number of required components available.
+3. Location master (Not available).
+	- Mapping to supplier location 
+
+4. PO (Available)
+	- Supplier names and components bought from them.
+		- Total number of quantity of each components bought.
+	- Promise date. 
+	- PO date.
+	- Supplier location(Supplier's only have country as location).
+
+	
+Steps to create risk calculation data (Port risk) :
+	step 1 - joining PO data to Location master  to get supplier's location
+				i - getting suppliers exact location based on lat & lng 
+	step 2 - joining Bom data to output of step 1 to get products component which are required to manufacture it
+	
+	step 3 - selecting columns 
+	
+	step 4 - getting port congestion data for supplier's port 
+
+	step 5 - getting lead time by taking difference between PO creation date and promise date
+	
+	step 6 - getting risky supplier based on difference between promise day port delay and predicted or actual day if difference is greater then 0 
+			 supplier is risky and the difference will added into lead time .
+			 
+	#### step 7 - Then we calculate revenue loss based on difference between promise day and actual day if greater then 1 those many days
+			 production will be hampered . 
+			 
+			 
+
+
+Steps to create risk calculation data (Finance risk) :
+	step 1 - joining PO data to Location master  to get supplier's location
+				i - getting suppliers exact location based on lat & lng 
+	step 2 - joining Bom data to output of step 1 to get products component which are required to manufacture it
+	
+	step 3 - Finding suppliers financial from trusted sources 
+				i - different financial indicator's
+	
+	step 4 - Checking threshold for financial indicators if extracted indicator value is greater then threshold risk of shipper will be directly 
+			 proportional to financial indicator value.
+			 E.g. Z-score indicator < 1.3 risk is 100%(high)
+				  if risk is high all component coming from supplier will not be considered to be shipped
+				  Z-score indicator > 1.3 and indicator < 2.9 risk is 30%(mid)
+				  if risk is mid 30% of component coming from supplier will not be considered to be shipped
+	
+	step 5 	 - Then we calculate revenue loss based on total amount product manufactured when there was no risk - total number of product 
+			   manufactured after risk .That will be my revenue loss due to less product manufactured.

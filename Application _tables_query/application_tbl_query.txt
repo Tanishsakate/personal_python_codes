@@ -1,0 +1,94 @@
+Application layer
+1.Supplier_network_table :
+
+CREATE TABLE gtosqldbdev.cortevadev2.Supplier_Network (
+	shipper_id int NULL,
+	shipper_name varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	shipper_tier varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	consignee_id int NULL,
+	consignee_company_name varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	[month] int NULL,
+	[year] int NULL,
+	risk_type varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	score int NULL,
+	quarter varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	country varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	lat float NULL,
+	lng float NULL,
+	is_default int NULL,
+	iso2 varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	product_name varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	product_id int NULL,
+	component_name varchar(50) COLLATE Latin1_General_100_CI_AI_SC_UTF8 NULL,
+	component_id int NULL
+);
+with product_name as 
+(
+	SELECT DISTINCT tm.id ,tm.material_id as product_id ,product_name  from cortevadev2.Product_Network_VCN pnv 
+	inner join cortevadev1.tbl_material tm on pnv.product_id = tm.material_id  	
+),
+component_name as
+(
+	SELECT DISTINCT tc2.id,tc2.comp_id as component_id  ,component_name  from cortevadev2.Product_Network_VCN pnv
+	inner join cortevadev1.tbl_component tc2 on pnv.component_id  = tc2.comp_id  
+),
+company_name as
+(
+	SELECT DISTINCT tc.id ,tc.company_name  from cortevadev1.tbl_company tc  
+),
+company_name_2 as
+(
+	SELECT DISTINCT tc.id ,tc.company_name  from cortevadev1.tbl_company tc  
+),
+location_table as
+(
+	select DISTINCT country ,iso2  from cortevadev1.tbl_world_locations twl 
+)
+SELECT sv.company_id as shipper_id ,cn2.company_name as shipper_name,sv.tier as shipper_tier 
+,sv.parent_id as consignee_id ,cn.company_name as consignee_company_name,sv.[month] ,sv.[year] ,sv.risk_type ,sv.score 
+,sv.quarter ,sv.country ,sv.lat ,sv.lng ,sv.is_default ,ll.iso2,
+pn.product_name,pn.product_id,cn1.component_name,cn1.component_id
+from cortevadev2.supplier_vcn sv 
+left  join company_name cn  on sv.parent_id  = cn.id
+left join company_name_2 cn2 on sv.company_id = cn2.id
+left join product_name pn on  sv.product_id = pn.id
+left join component_name cn1 on sv.component_id = cn1.id
+left join location_table ll on sv.country = ll.country;
+--where cn.company_name not null;
+--where cn2.company_name is null;
+--where sv.company_id  = 1436;
+where pn.product_id is not null;
+
+
+
+2. 
+--  2nd product vcn table
+with product_vcn as (
+	SELECT pnv.product_id,tm.id as ogproduct_id ,pnv.consignee_id ,pnv.component_id ,tc.id as og_comp_id , pnv.shipper_id
+	,pnv.shipper_tier ,pnv.country ,pnv.lat ,pnv.lng ,pnv.iso2,pnv.product_category,pnv.quarter,pnv.risk_type ,pnv.risk_level  
+	,pnv.score,pnv.home_port_id,is_default  
+	from cortevadev2.Product_Network_VCN pnv
+	left join cortevadev1.tbl_component tc on pnv.component_id = tc.comp_id 
+	left join cortevadev1.tbl_material tm on pnv.product_id = tm.material_id 
+)
+SELECT pnv1.product_id,pnv1.ogproduct_id ,pnv1.consignee_id ,pnv1.component_id ,pnv1.og_comp_id 
+,pnv1.shipper_id,pnv1.shipper_tier ,pnv1.country ,pnv1.lat ,pnv1.lng ,pnv1.iso2,pnv1.product_category ,
+ti.tier ,ti.[year] ,ti.[month],pnv1.quarter   ,ti.invoice_quantity ,ti.invoice_amount ,
+pnv1.risk_type ,pnv1.risk_level,pnv1.score,pnv1.home_port_id,is_default
+from product_vcn pnv1 
+left join cortevadev1.tbl_invoice ti 
+on pnv1.shipper_id = ti.shipper_id 
+and pnv1.og_comp_id = ti.comp_id 
+and pnv1.ogproduct_id = ti.material_id ;
+
+-- creating product vcn for 3rd layer (application layer)
+select pnv1.product_id,pnv1.ogproduct_id,por.product_name ,pnv1.consignee_id, sup1.shipper_name as consignee_name,pnv1.component_id ,cor.component_name
+		,pnv1.og_comp_id 
+		,pnv1.shipper_id,sup2.shipper_name as shipper_name,pnv1.shipper_tier ,pnv1.country ,pnv1.lat ,pnv1.lng ,pnv1.iso2,pnv1.product_category ,
+		ti.[year] ,ti.[month],pnv1.quarter   ,ti.invoice_quantity ,ti.invoice_amount ,
+		pnv1.risk_type ,pnv1.risk_level,pnv1.score,pnv1.home_port_id 
+from 2nd_layer_product_vcn pnv1
+left join 2nd_layer_product_tbl por on pnv1.product_id = por.product_id
+left join 2nd_layer_component_tbl cor on pnv1.component_id = cor.component
+left join 2nd_layer_supplier_tbl sup1 on pnv1.consignee_id = sup1.shipper_id
+left join 2nd_layer_supplier_tbl sup2 on pnv1.shipper_id = sup2.shipper_id ;

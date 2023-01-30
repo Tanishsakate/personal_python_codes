@@ -1,0 +1,13 @@
+- Tables which we can use and integrate in prime from core platform
+1. vendor master (core)
+2. tbl_company adding industry column(company names from core)
+3. purchase order data (core)
+4. tbl_saving (core) column-client not confirmed T0 or T1.
+
+- 24-01-2023 
+	- Meeting regarding ice data model
+	1.  
+
+- 25-01-2023
+1. commodities 
+	- has month wise commodity prices.
